@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     // Agentic loop: keep going until we get a final text response
     let response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 4096,
       system: buildSystemPrompt(),
       tools,
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
       });
 
       response = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-6",
         max_tokens: 4096,
         system: buildSystemPrompt(),
         tools,

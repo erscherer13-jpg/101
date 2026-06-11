@@ -167,7 +167,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(parsed);
   } catch (err) {
-    console.error("recommend route error:", err);
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("recommend route error:", message);
+    return NextResponse.json({ error: "Something went wrong", detail: message }, { status: 500 });
   }
 }

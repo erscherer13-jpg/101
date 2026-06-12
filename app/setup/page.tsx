@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { saveProfile } from "@/lib/storage";
 import type { DadProfile } from "@/lib/types";
+import Header from "@/components/Header";
 
 export default function SetupPage() {
   const [status, setStatus] = useState<"idle" | "loaded" | "error">("idle");
@@ -27,7 +28,9 @@ export default function SetupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#faf6f0] flex items-center justify-center px-4">
+    <main className="min-h-screen bg-[#faf6f0]">
+      <Header />
+      <div className="flex items-center justify-center px-4 py-12">
       <div className="max-w-sm w-full text-center">
         <h1 className="text-2xl font-serif text-[#3b2a1a] mb-2">Load taste profile</h1>
         <p className="text-sm text-[#8a6a52] mb-8 leading-relaxed">
@@ -67,6 +70,7 @@ export default function SetupPage() {
             )}
           </>
         )}
+      </div>
       </div>
     </main>
   );

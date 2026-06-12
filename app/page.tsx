@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ResultsGrid from "@/components/ResultsGrid";
+import Header from "@/components/Header";
 import { loadProfile, loadHistory, addToHistory, loadRejected, loadEnjoyed } from "@/lib/storage";
 import type { BookRecommendation, RecommendRequest } from "@/lib/types";
 
@@ -72,14 +73,9 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#faf6f0] px-4 py-12 pb-20">
-      <div className={`mx-auto transition-all duration-300 ${results ? "max-w-5xl" : "max-w-2xl"}`}>
-        {/* Wordmark */}
-        <div className="mb-10 text-center">
-          <h1 className="text-3xl font-serif text-[#3b2a1a] tracking-tight">
-            Jeff&rsquo;s<span className="text-[#b5763a]">BookMatch</span>
-          </h1>
-        </div>
+    <main className="min-h-screen bg-[#faf6f0] pb-20">
+      <Header />
+      <div className={`mx-auto px-4 transition-all duration-300 ${results ? "max-w-5xl" : "max-w-2xl"}`}>
 
         {!results ? (
           <form onSubmit={handleSubmit} className="space-y-7">
@@ -178,12 +174,6 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-[#faf6f0]/90 backdrop-blur-sm border-t border-[#e8ddd0] py-2 text-center">
-        <a href="/setup" className="text-xs text-[#c4a882] hover:text-[#8a6a52] transition-colors">
-          setup
-        </a>
-      </footer>
     </main>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { BookEntry, DadProfile } from "@/lib/types";
+import Header from "@/components/Header";
 
 const emptyBook = (): BookEntry => ({ title: "", word: "" });
 
@@ -76,7 +77,9 @@ export default function ProfileFormPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#faf6f0] px-4 py-12">
+    <main className="min-h-screen bg-[#faf6f0]">
+      <Header />
+      <div className="px-4 py-8">
       <div className="max-w-xl mx-auto">
         {/* Header */}
         <div className="mb-10 text-center">
@@ -279,6 +282,7 @@ export default function ProfileFormPage() {
             </p>
           </div>
         </div>
+      </div>
       </div>
     </main>
   );

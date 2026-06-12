@@ -33,6 +33,14 @@ export interface BookRecommendation {
   length: "Quick" | "Medium" | "Long";
 }
 
+export interface ReadingListEntry {
+  id: string;
+  title: string;
+  author: string;
+  description: string;
+  whyYoudLoveIt: string;
+}
+
 export interface RecommendResponse {
   books: BookRecommendation[];
 }

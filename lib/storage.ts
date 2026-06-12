@@ -1,11 +1,12 @@
 "use client";
 
-import type { DadProfile, BookRecommendation } from "./types";
+import type { DadProfile, BookRecommendation, ReadingListEntry } from "./types";
 
 const PROFILE_KEY = "jbm_dad_profile";
 const HISTORY_KEY = "jbm_recommendation_history";
 const REJECTED_KEY = "jbm_rejected_books";
 const ENJOYED_KEY = "jbm_enjoyed_books";
+const READING_LIST_KEY = "jbm_reading_list";
 
 export function saveProfile(profile: DadProfile): void {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
@@ -64,4 +65,24 @@ export function loadEnjoyed(): string[] {
 
 export function addEnjoyed(title: string): void {
   addToStringList(ENJOYED_KEY, title);
+}
+
+export function loadReadingList(): ReadingListEntry[] {
+  try {
+    const raw = localStorage.getItem(READING_LIST_KEY);
+    return raw ? (JSON.parse(raw) as ReadingListEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addToReadingList(entry: ReadingListEntry): void {
+  const existing = loadReadingList();
+  if (existing.some((e) => e.id === entry.id)) return;
+  localStorage.setItem(READING_LIST_KEY, JSON.stringify([...existing, entry]));
+}
+
+export function removeFromReadingList(id: string): void {
+  const updated = loadReadingList().filter((e) => e.id !== id);
+  localStorage.setItem(READING_LIST_KEY, JSON.stringify(updated));
 }

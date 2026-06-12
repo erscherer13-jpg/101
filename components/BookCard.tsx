@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import type { BookRecommendation } from "@/lib/types";
 import { getEllieRating } from "@/lib/ellie-ratings";
+import { addToReadingList } from "@/lib/storage";
 
 interface Props {
   book: BookRecommendation;
@@ -19,6 +21,18 @@ const lengthColors: Record<string, string> = {
 
 export default function BookCard({ book, onNotForMe, onEnjoyed, replacing, enjoyed }: Props) {
   const ellieRating = getEllieRating(book.title);
+  const [added, setAdded] = useState(false);
+
+  function handleAddToList() {
+    addToReadingList({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      description: book.description,
+      whyYoudLoveIt: book.whyYoudLoveIt,
+    });
+    setAdded(true);
+  }
 
   return (
     <article className="bg-white border border-[#e0d5c5] rounded-2xl p-6 shadow-sm flex flex-col gap-4 transition-opacity duration-300">
@@ -64,7 +78,7 @@ export default function BookCard({ book, onNotForMe, onEnjoyed, replacing, enjoy
         </div>
       )}
 
-      <div className="mt-auto flex gap-2">
+      <div className="mt-auto flex flex-wrap gap-2">
         <button
           onClick={() => onNotForMe(book.id)}
           disabled={replacing}
@@ -82,6 +96,17 @@ export default function BookCard({ book, onNotForMe, onEnjoyed, replacing, enjoy
           }`}
         >
           {enjoyed ? "✓ Enjoyed" : "Read & Enjoyed"}
+        </button>
+        <button
+          onClick={handleAddToList}
+          disabled={added}
+          className={`text-xs border rounded-lg px-3 py-1.5 transition-colors duration-150 ${
+            added
+              ? "text-[#b5763a] border-[#f0dfc0] bg-[#fdf3e7] cursor-default"
+              : "text-[#a08060] hover:text-[#b5763a] border-[#d9c9b5] hover:border-[#f0dfc0]"
+          }`}
+        >
+          {added ? "Added ✓" : "Add to list"}
         </button>
       </div>
     </article>

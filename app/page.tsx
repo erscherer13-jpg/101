@@ -74,7 +74,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#faf6f0] pb-20">
-      <Header />
+      <Header onTitleClick={results ? handleNewSearch : undefined} />
       <div className={`mx-auto px-4 transition-all duration-300 ${results ? "max-w-5xl" : "max-w-2xl"}`}>
 
         {!results ? (

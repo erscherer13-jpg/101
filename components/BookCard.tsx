@@ -80,11 +80,15 @@ export default function BookCard({ book, onNotForMe, onEnjoyed, replacing, enjoy
 
       <div className="mt-auto flex flex-wrap gap-2">
         <button
-          onClick={() => onNotForMe(book.id)}
-          disabled={replacing}
-          className="text-xs text-[#a08060] hover:text-[#6b3e1a] border border-[#d9c9b5] hover:border-[#b5763a] rounded-lg px-3 py-1.5 transition-colors duration-150 disabled:opacity-40 disabled:cursor-wait"
+          onClick={handleAddToList}
+          disabled={added}
+          className={`text-xs border rounded-lg px-3 py-1.5 transition-colors duration-150 ${
+            added
+              ? "text-[#b5763a] border-[#f0dfc0] bg-[#fdf3e7] cursor-default"
+              : "text-[#a08060] hover:text-[#b5763a] border-[#d9c9b5] hover:border-[#f0dfc0]"
+          }`}
         >
-          {replacing ? "Finding another…" : "Not for me"}
+          {added ? "Added ✓" : "Add to list"}
         </button>
         <button
           onClick={() => onEnjoyed(book.id)}
@@ -98,15 +102,11 @@ export default function BookCard({ book, onNotForMe, onEnjoyed, replacing, enjoy
           {enjoyed ? "✓ Enjoyed" : "Read & Enjoyed"}
         </button>
         <button
-          onClick={handleAddToList}
-          disabled={added}
-          className={`text-xs border rounded-lg px-3 py-1.5 transition-colors duration-150 ${
-            added
-              ? "text-[#b5763a] border-[#f0dfc0] bg-[#fdf3e7] cursor-default"
-              : "text-[#a08060] hover:text-[#b5763a] border-[#d9c9b5] hover:border-[#f0dfc0]"
-          }`}
+          onClick={() => onNotForMe(book.id)}
+          disabled={replacing}
+          className="text-xs text-[#a08060] hover:text-[#6b3e1a] border border-[#d9c9b5] hover:border-[#b5763a] rounded-lg px-3 py-1.5 transition-colors duration-150 disabled:opacity-40 disabled:cursor-wait"
         >
-          {added ? "Added ✓" : "Add to list"}
+          {replacing ? "Finding another…" : "Not for me"}
         </button>
       </div>
     </article>

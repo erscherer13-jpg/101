@@ -64,7 +64,7 @@ const ratings: Record<string, number> = {
   "the great gatsby": 5,
   "the book thief": 4,
   "code name verity": 1,
-  "the seven husbands of evelyn hugo": 0, // rating not received — update when known
+  "the seven husbands of evelyn hugo": 3,
 };
 
 export function getEllieRating(title: string): number | null {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import BookCard from "./BookCard";
 import type { BookRecommendation, RecommendRequest } from "@/lib/types";
-import { addToHistory } from "@/lib/storage";
+import { addToHistory, addRejected, addEnjoyed, loadRejected, loadEnjoyed } from "@/lib/storage";
 
 interface Props {
   books: BookRecommendation[];
@@ -16,11 +16,13 @@ export default function ResultsGrid({ books: initial, request, sessionShown, onH
   const [books, setBooks] = useState<BookRecommendation[]>(initial);
   const [replacing, setReplacing] = useState<string | null>(null);
   const [allShown, setAllShown] = useState<string[]>(sessionShown);
+  const [enjoyedIds, setEnjoyedIds] = useState<Set<string>>(new Set());
 
   async function handleNotForMe(id: string) {
     const book = books.find((b) => b.id === id);
     if (!book) return;
     setReplacing(id);
+    addRejected(book.title);
 
     try {
       const res = await fetch("/api/recommend", {
@@ -30,6 +32,8 @@ export default function ResultsGrid({ books: initial, request, sessionShown, onH
           ...request,
           history: allShown,
           exclude: allShown,
+          rejected: loadRejected(),
+          enjoyed: loadEnjoyed(),
         } satisfies RecommendRequest),
       });
       const data = await res.json();
@@ -42,7 +46,6 @@ export default function ResultsGrid({ books: initial, request, sessionShown, onH
         onHistoryUpdate(newTitles);
         setBooks((prev) => prev.map((b) => (b.id === id ? replacement : b)));
       } else {
-        // No replacement found — just dismiss the card
         setBooks((prev) => prev.filter((b) => b.id !== id));
       }
     } catch {
@@ -52,6 +55,13 @@ export default function ResultsGrid({ books: initial, request, sessionShown, onH
     }
   }
 
+  function handleEnjoyed(id: string) {
+    const book = books.find((b) => b.id === id);
+    if (!book) return;
+    addEnjoyed(book.title);
+    setEnjoyedIds((prev) => new Set([...prev, id]));
+  }
+
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {books.map((book) => (
@@ -59,7 +69,9 @@ export default function ResultsGrid({ books: initial, request, sessionShown, onH
           key={book.id}
           book={book}
           onNotForMe={handleNotForMe}
+          onEnjoyed={handleEnjoyed}
           replacing={replacing === book.id}
+          enjoyed={enjoyedIds.has(book.id)}
         />
       ))}
     </div>

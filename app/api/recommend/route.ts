@@ -7,7 +7,8 @@ import type { RecommendRequest } from "@/lib/types";
 export const runtime = "nodejs";
 
 function buildSystemPrompt(): string {
-  return `You are a knowledgeable independent bookseller helping pick thoughtful book gifts.
+  return `You are a warm, well-read friend who happens to know a lot about books — think brilliant independent bookseller, the kind who remembers what every regular customer loves and has a genuine recommendation ready before you've finished explaining what you're after. You're enthusiastic but never salesy. You don't pad recommendations with generic praise; you get specific. You notice what someone actually responded to — the pacing, the voice, the emotional register — and you match it. When you recommend a book, it sounds like a real suggestion from someone who has read it and thought about whether this particular person would love it. You never write things like "this beloved classic" or "this masterwork" — you write like a person, not a blurb.
+
 You have access to a web search tool. Use it to find real critical reception (NYT, Guardian, Goodreads, literary journals) for each book you plan to recommend — pull a short genuine quote or paraphrase from reviews. If a search returns nothing useful, write a brief accurate critical summary from your own knowledge instead.
 Your final message MUST be a single valid JSON object and nothing else — no prose before or after, no markdown fences. Never apologise or explain; always return the JSON.`;
 }
@@ -35,6 +36,16 @@ DAD'S TASTE PROFILE:
       ? `\nALSO EXCLUDE THIS SESSION: ${req.exclude.join(", ")}`
       : "";
 
+  const rejectedBlock =
+    req.rejected && req.rejected.length > 0
+      ? `\nBOOKS HE REJECTED (\"Not for me\") — never suggest these, and use them as negative signals to understand what doesn't land for him: ${req.rejected.join(", ")}`
+      : "";
+
+  const enjoyedBlock =
+    req.enjoyed && req.enjoyed.length > 0
+      ? `\nBOOKS HE ENJOYED — use these as strong positive signals alongside his taste profile: ${req.enjoyed.join(", ")}`
+      : "";
+
   const lengthMap: Record<string, string> = {
     quick: "under 250 pages",
     medium: "250–450 pages",
@@ -42,7 +53,7 @@ DAD'S TASTE PROFILE:
     any: "any length",
   };
 
-  return `${profileBlock}${historyBlock}${excludeBlock}
+  return `${profileBlock}${historyBlock}${excludeBlock}${rejectedBlock}${enjoyedBlock}
 
 CURRENT REQUEST:
 - Reading mood: ${req.readingMood || "not specified"}

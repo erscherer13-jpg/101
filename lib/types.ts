@@ -19,6 +19,8 @@ export interface RecommendRequest {
   length: "quick" | "medium" | "long" | "any";
   history: string[]; // titles already shown
   exclude?: string[]; // extra titles to exclude (used for replacements)
+  rejected?: string[]; // titles explicitly rejected via "Not for me"
+  enjoyed?: string[]; // titles marked as enjoyed
 }
 
 export interface BookRecommendation {

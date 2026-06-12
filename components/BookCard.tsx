@@ -5,7 +5,9 @@ import type { BookRecommendation } from "@/lib/types";
 interface Props {
   book: BookRecommendation;
   onNotForMe: (id: string) => void;
+  onEnjoyed: (id: string) => void;
   replacing?: boolean;
+  enjoyed?: boolean;
 }
 
 const lengthColors: Record<string, string> = {
@@ -14,7 +16,7 @@ const lengthColors: Record<string, string> = {
   Long: "bg-[#e8e4f0] text-[#4a3a6b]",
 };
 
-export default function BookCard({ book, onNotForMe, replacing }: Props) {
+export default function BookCard({ book, onNotForMe, onEnjoyed, replacing, enjoyed }: Props) {
   return (
     <article className="bg-white border border-[#e0d5c5] rounded-2xl p-6 shadow-sm flex flex-col gap-4 transition-opacity duration-300">
       <div className="flex items-start justify-between gap-3">
@@ -44,13 +46,26 @@ export default function BookCard({ book, onNotForMe, replacing }: Props) {
         </p>
       )}
 
-      <button
-        onClick={() => onNotForMe(book.id)}
-        disabled={replacing}
-        className="mt-auto self-start text-xs text-[#a08060] hover:text-[#6b3e1a] border border-[#d9c9b5] hover:border-[#b5763a] rounded-lg px-3 py-1.5 transition-colors duration-150 disabled:opacity-40 disabled:cursor-wait"
-      >
-        {replacing ? "Finding another…" : "Not for me"}
-      </button>
+      <div className="mt-auto flex gap-2">
+        <button
+          onClick={() => onNotForMe(book.id)}
+          disabled={replacing}
+          className="text-xs text-[#a08060] hover:text-[#6b3e1a] border border-[#d9c9b5] hover:border-[#b5763a] rounded-lg px-3 py-1.5 transition-colors duration-150 disabled:opacity-40 disabled:cursor-wait"
+        >
+          {replacing ? "Finding another…" : "Not for me"}
+        </button>
+        <button
+          onClick={() => onEnjoyed(book.id)}
+          disabled={enjoyed}
+          className={`text-xs border rounded-lg px-3 py-1.5 transition-colors duration-150 ${
+            enjoyed
+              ? "text-[#3a6b3a] border-[#a8d4a8] bg-[#e8f4e8] cursor-default"
+              : "text-[#a08060] hover:text-[#3a6b3a] border-[#d9c9b5] hover:border-[#a8d4a8]"
+          }`}
+        >
+          {enjoyed ? "✓ Enjoyed" : "Read & Enjoyed"}
+        </button>
+      </div>
     </article>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ResultsGrid from "@/components/ResultsGrid";
-import { loadProfile, loadHistory, addToHistory } from "@/lib/storage";
+import { loadProfile, loadHistory, addToHistory, loadRejected, loadEnjoyed } from "@/lib/storage";
 import type { BookRecommendation, RecommendRequest } from "@/lib/types";
 
 type Length = "quick" | "medium" | "long" | "any";
@@ -18,16 +18,11 @@ export default function HomePage() {
   const [mood, setMood] = useState("");
   const [avoid, setAvoid] = useState("");
   const [length, setLength] = useState<Length>("any");
-  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState<BookRecommendation[] | null>(null);
   const [sessionShown, setSessionShown] = useState<string[]>([]);
   const [currentRequest, setCurrentRequest] = useState<Omit<RecommendRequest, "history" | "exclude"> | null>(null);
-
-  useEffect(() => {
-    setHasProfile(!!loadProfile());
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,6 +39,8 @@ export default function HomePage() {
       avoidThis: avoid,
       length,
       history,
+      rejected: loadRejected(),
+      enjoyed: loadEnjoyed(),
     };
 
     try {
@@ -83,19 +80,6 @@ export default function HomePage() {
             Jeff&rsquo;s<span className="text-[#b5763a]">BookMatch</span>
           </h1>
         </div>
-
-        {/* Profile nudge */}
-        {hasProfile === false && (
-          <div className="mb-6 text-center">
-            <p className="text-sm text-[#8a6a52]">
-              For better recommendations,{" "}
-              <a href="/setup" className="text-[#b5763a] underline underline-offset-2 hover:text-[#8a4e20]">
-                add a taste profile in setup
-              </a>
-              .
-            </p>
-          </div>
-        )}
 
         {!results ? (
           <form onSubmit={handleSubmit} className="space-y-7">

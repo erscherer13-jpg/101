@@ -12,12 +12,12 @@ export default function Header({ onTitleClick }: Props) {
       {onTitleClick ? (
         <button
           onClick={onTitleClick}
-          className="text-4xl font-serif text-[#3b2a1a] tracking-tight hover:opacity-80 transition-opacity"
+          className="text-5xl font-serif text-[#3b2a1a] tracking-tight hover:opacity-80 transition-opacity"
         >
           Jeff&rsquo;s<span className="text-[#b5763a]">BookMatch</span>
         </button>
       ) : (
-        <Link href="/" className="text-4xl font-serif text-[#3b2a1a] tracking-tight hover:opacity-80 transition-opacity">
+        <Link href="/" className="text-5xl font-serif text-[#3b2a1a] tracking-tight hover:opacity-80 transition-opacity">
           Jeff&rsquo;s<span className="text-[#b5763a]">BookMatch</span>
         </Link>
       )}

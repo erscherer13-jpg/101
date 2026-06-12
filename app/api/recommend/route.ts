@@ -1,13 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
-import type { RecommendRequest, BookRecommendation } from "@/lib/types";
+import type { RecommendRequest } from "@/lib/types";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 function buildSystemPrompt(): string {
   return `You are a knowledgeable independent bookseller helping pick thoughtful book gifts.
-You have access to a web_search tool. Use it to find real critical reception (NYT, Guardian, Goodreads, literary journals) for each book you plan to recommend — pull a short genuine quote or paraphrase from reviews.
-Always return valid JSON only — no markdown, no explanation outside the JSON object.`;
+You have access to a web search tool. Use it to find real critical reception (NYT, Guardian, Goodreads, literary journals) for each book you plan to recommend — pull a short genuine quote or paraphrase from reviews. If a search returns nothing useful, write a brief accurate critical summary from your own knowledge instead.
+Your final message MUST be a single valid JSON object and nothing else — no prose before or after, no markdown fences. Never apologise or explain; always return the JSON.`;
 }
 
 function buildUserPrompt(req: RecommendRequest): string {
@@ -73,98 +73,39 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as RecommendRequest;
 
-    const tools: Anthropic.Tool[] = [
+    // Anthropic's native server-side web search tool — searches are run by the
+    // API itself, so no separate search API key or manual tool loop is needed.
+    const tools = [
       {
+        type: "web_search_20250305",
         name: "web_search",
-        description: "Search the web for book reviews and critical reception.",
-        input_schema: {
-          type: "object" as const,
-          properties: {
-            query: { type: "string", description: "The search query" },
-          },
-          required: ["query"],
-        },
+        max_uses: 6,
       },
-    ];
+    ] as unknown as Anthropic.Tool[];
 
-    const messages: Anthropic.MessageParam[] = [
-      { role: "user", content: buildUserPrompt(body) },
-    ];
-
-    // Agentic loop: keep going until we get a final text response
-    let response = await client.messages.create({
+    const response = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
       system: buildSystemPrompt(),
       tools,
-      messages,
+      messages: [{ role: "user", content: buildUserPrompt(body) }],
     });
 
-    while (response.stop_reason === "tool_use") {
-      const toolUseBlocks = response.content.filter(
-        (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
-      );
-      if (toolUseBlocks.length === 0) break;
+    // Combine every text block, then pull out the JSON object between the
+    // first { and last } — robust against any stray prose the model adds.
+    const fullText = response.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join("\n");
 
-      // Handle all tool calls in this response in parallel
-      const toolResults = await Promise.all(
-        toolUseBlocks.map(async (toolUseBlock) => {
-          const query = (toolUseBlock.input as { query: string }).query;
-          let searchResult = "";
-          try {
-            const searchRes = await fetch(
-              `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=3`,
-              {
-                headers: {
-                  Accept: "application/json",
-                  "Accept-Encoding": "gzip",
-                  "X-Subscription-Token": process.env.BRAVE_SEARCH_API_KEY || "",
-                },
-              }
-            );
-            if (searchRes.ok) {
-              const data = await searchRes.json();
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              searchResult = (data.web?.results || []).slice(0, 3).map((r: any) =>
-                `${r.title}: ${r.description}`
-              ).join("\n");
-            } else {
-              searchResult = "Search unavailable.";
-            }
-          } catch {
-            searchResult = "Search unavailable.";
-          }
-          return {
-            type: "tool_result" as const,
-            tool_use_id: toolUseBlock.id,
-            content: searchResult || "No results found.",
-          };
-        })
-      );
-
-      messages.push({ role: "assistant", content: response.content });
-      messages.push({ role: "user", content: toolResults });
-
-      response = await client.messages.create({
-        model: "claude-sonnet-4-6",
-        max_tokens: 4096,
-        system: buildSystemPrompt(),
-        tools,
-        messages,
-      });
+    const start = fullText.indexOf("{");
+    const end = fullText.lastIndexOf("}");
+    if (start === -1 || end === -1 || end <= start) {
+      console.error("recommend route: no JSON found in response:", fullText.slice(0, 300));
+      return NextResponse.json({ error: "No recommendations returned" }, { status: 500 });
     }
 
-    const textBlock = response.content.find(
-      (b): b is Anthropic.TextBlock => b.type === "text"
-    );
-    if (!textBlock) {
-      return NextResponse.json({ error: "No response from AI" }, { status: 500 });
-    }
-
-    // Extract JSON from the response text (strip any accidental markdown fences)
-    const raw = textBlock.text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-    const parsed = JSON.parse(raw);
-
+    const parsed = JSON.parse(fullText.slice(start, end + 1));
     return NextResponse.json(parsed);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

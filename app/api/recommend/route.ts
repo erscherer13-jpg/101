@@ -101,49 +101,49 @@ export async function POST(req: NextRequest) {
     });
 
     while (response.stop_reason === "tool_use") {
-      const toolUseBlock = response.content.find(
+      const toolUseBlocks = response.content.filter(
         (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
       );
-      if (!toolUseBlock) break;
+      if (toolUseBlocks.length === 0) break;
 
-      // Perform the web search
-      const query = (toolUseBlock.input as { query: string }).query;
-      let searchResult = "";
-      try {
-        const searchRes = await fetch(
-          `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=3`,
-          {
-            headers: {
-              Accept: "application/json",
-              "Accept-Encoding": "gzip",
-              "X-Subscription-Token": process.env.BRAVE_SEARCH_API_KEY || "",
-            },
+      // Handle all tool calls in this response in parallel
+      const toolResults = await Promise.all(
+        toolUseBlocks.map(async (toolUseBlock) => {
+          const query = (toolUseBlock.input as { query: string }).query;
+          let searchResult = "";
+          try {
+            const searchRes = await fetch(
+              `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=3`,
+              {
+                headers: {
+                  Accept: "application/json",
+                  "Accept-Encoding": "gzip",
+                  "X-Subscription-Token": process.env.BRAVE_SEARCH_API_KEY || "",
+                },
+              }
+            );
+            if (searchRes.ok) {
+              const data = await searchRes.json();
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              searchResult = (data.web?.results || []).slice(0, 3).map((r: any) =>
+                `${r.title}: ${r.description}`
+              ).join("\n");
+            } else {
+              searchResult = "Search unavailable.";
+            }
+          } catch {
+            searchResult = "Search unavailable.";
           }
-        );
-        if (searchRes.ok) {
-          const data = await searchRes.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          searchResult = (data.web?.results || []).slice(0, 3).map((r: any) =>
-            `${r.title}: ${r.description}`
-          ).join("\n");
-        } else {
-          searchResult = "Search unavailable.";
-        }
-      } catch {
-        searchResult = "Search unavailable.";
-      }
-
-      messages.push({ role: "assistant", content: response.content });
-      messages.push({
-        role: "user",
-        content: [
-          {
-            type: "tool_result",
+          return {
+            type: "tool_result" as const,
             tool_use_id: toolUseBlock.id,
             content: searchResult || "No results found.",
-          },
-        ],
-      });
+          };
+        })
+      );
+
+      messages.push({ role: "assistant", content: response.content });
+      messages.push({ role: "user", content: toolResults });
 
       response = await client.messages.create({
         model: "claude-sonnet-4-6",

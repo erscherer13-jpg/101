@@ -13,6 +13,7 @@ export default function ProfileFormPage() {
   const [avoidTopics, setAvoidTopics] = useState("");
   const [greatBookMeans, setGreatBookMeans] = useState("");
   const [saved, setSaved] = useState(false);
+  const [sending, setSending] = useState(false);
 
   function updateBook(
     list: BookEntry[],
@@ -34,7 +35,7 @@ export default function ProfileFormPage() {
     setList(list.filter((_, i) => i !== index));
   }
 
-  function handleSave() {
+  async function handleSave() {
     const profile: DadProfile = {
       lovedBooks: lovedBooks.filter((b) => b.title.trim()),
       dislikedBooks: dislikedBooks.filter((b) => b.title.trim()),
@@ -43,6 +44,8 @@ export default function ProfileFormPage() {
       avoidTopics,
       greatBookMeans,
     };
+
+    // Download JSON for /setup upload
     const blob = new Blob([JSON.stringify(profile, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -50,6 +53,24 @@ export default function ProfileFormPage() {
     a.download = "dad-profile.json";
     a.click();
     URL.revokeObjectURL(url);
+
+    // Email answers to Ellie via Formspree
+    const endpoint = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
+    if (endpoint) {
+      setSending(true);
+      try {
+        await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(profile),
+        });
+      } catch {
+        // Non-fatal — download already succeeded
+      } finally {
+        setSending(false);
+      }
+    }
+
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   }
@@ -60,15 +81,16 @@ export default function ProfileFormPage() {
         {/* Header */}
         <div className="mb-10 text-center">
           <p className="text-[#b5763a] text-sm tracking-widest uppercase mb-2 font-medium">
-            A note from Jeff
+            A note from Ellie
           </p>
           <h1 className="text-4xl font-serif text-[#3b2a1a] mb-4 leading-snug">
             Help me find you<br />the perfect book
           </h1>
           <p className="text-[#6b5240] text-base leading-relaxed max-w-md mx-auto">
-            I love picking books for you, and I want to get it right. This little form helps me
-            understand what you enjoy — no wrong answers, just what feels true to you. Takes about
-            two minutes.
+            I love picking books for you, but I&rsquo;ll be honest — I don&rsquo;t always know what
+            you&rsquo;ll love. I built this little tool to help me get it right. Take a couple of
+            minutes to fill this out and it&rsquo;ll make all the difference. No wrong answers, just
+            what feels true to you.
           </p>
         </div>
 
@@ -250,10 +272,10 @@ export default function ProfileFormPage() {
               onClick={handleSave}
               className="bg-[#b5763a] hover:bg-[#8a4e20] text-white font-semibold text-base px-10 py-4 rounded-xl shadow-md transition-colors duration-200 w-full sm:w-auto"
             >
-              {saved ? "✓ Saved — check your downloads" : "Save my answers"}
+              {saved ? "✓ Saved — check your downloads" : sending ? "Sending…" : "Save my answers"}
             </button>
             <p className="mt-3 text-xs text-[#a08060]">
-              Downloads a small file to your device. Nothing is sent anywhere.
+              Downloads a small file to your device and sends your answers to Ellie.
             </p>
           </div>
         </div>

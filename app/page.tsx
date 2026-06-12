@@ -81,7 +81,7 @@ export default function HomePage() {
           <form onSubmit={handleSubmit} className="space-y-10">
             {/* Mood */}
             <div>
-              <label className="block font-serif text-[#3b2a1a] text-2xl mb-3">
+              <label className="block font-serif text-[#3b2a1a] text-xl mb-3">
                 What kind of read are you hoping for?
               </label>
               <input
@@ -95,7 +95,7 @@ export default function HomePage() {
 
             {/* Avoid */}
             <div>
-              <label className="block font-serif text-[#3b2a1a] text-2xl mb-3">
+              <label className="block font-serif text-[#3b2a1a] text-xl mb-3">
                 Anything to avoid this time?
               </label>
               <input
@@ -109,7 +109,7 @@ export default function HomePage() {
 
             {/* Length */}
             <div>
-              <label className="block font-serif text-[#3b2a1a] text-2xl mb-4">
+              <label className="block font-serif text-[#3b2a1a] text-xl mb-4">
                 How long a book?
               </label>
               <div className="flex flex-wrap gap-3">

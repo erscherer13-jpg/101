@@ -2,7 +2,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import type { RecommendRequest } from "@/lib/types";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// The Anthropic SDK needs the Node.js runtime — the edge runtime lacks the
+// APIs it depends on, so pin this route explicitly.
+export const runtime = "nodejs";
 
 function buildSystemPrompt(): string {
   return `You are a knowledgeable independent bookseller helping pick thoughtful book gifts.
@@ -69,47 +71,90 @@ Task:
 Length labels: Quick = under 250 pages, Medium = 250–450, Long = over 450.`;
 }
 
+async function getRecommendations(
+  client: Anthropic,
+  prompt: string,
+  withSearch: boolean
+) {
+  // Anthropic's native server-side web search tool — searches are run by the
+  // API itself, so no separate search API key or manual tool loop is needed.
+  const tools = withSearch
+    ? ([{ type: "web_search_20250305", name: "web_search", max_uses: 6 }] as unknown as Anthropic.Tool[])
+    : undefined;
+
+  return client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 4096,
+    system: buildSystemPrompt(),
+    ...(tools ? { tools } : {}),
+    messages: [{ role: "user", content: prompt }],
+  });
+}
+
 export async function POST(req: NextRequest) {
+  // Initialize the client inside the handler so a missing env var surfaces a
+  // clear error instead of crashing at module load.
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error("recommend route: ANTHROPIC_API_KEY is undefined");
+    return NextResponse.json(
+      { error: "Server not configured", detail: "ANTHROPIC_API_KEY is missing" },
+      { status: 500 }
+    );
+  }
+
+  const client = new Anthropic({ apiKey });
+
+  let body: RecommendRequest;
   try {
-    const body = (await req.json()) as RecommendRequest;
+    body = (await req.json()) as RecommendRequest;
+  } catch (err) {
+    console.error("recommend route: failed to parse request body:", err);
+    return NextResponse.json({ error: "Bad request" }, { status: 400 });
+  }
 
-    // Anthropic's native server-side web search tool — searches are run by the
-    // API itself, so no separate search API key or manual tool loop is needed.
-    const tools = [
-      {
-        type: "web_search_20250305",
-        name: "web_search",
-        max_uses: 6,
-      },
-    ] as unknown as Anthropic.Tool[];
+  const prompt = buildUserPrompt(body);
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 4096,
-      system: buildSystemPrompt(),
-      tools,
-      messages: [{ role: "user", content: buildUserPrompt(body) }],
-    });
-
-    // Combine every text block, then pull out the JSON object between the
-    // first { and last } — robust against any stray prose the model adds.
-    const fullText = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("\n");
-
-    const start = fullText.indexOf("{");
-    const end = fullText.lastIndexOf("}");
-    if (start === -1 || end === -1 || end <= start) {
-      console.error("recommend route: no JSON found in response:", fullText.slice(0, 300));
-      return NextResponse.json({ error: "No recommendations returned" }, { status: 500 });
+  // Try with web search first; if that fails (e.g. web search not enabled on
+  // the account), fall back to a plain request so the app still works.
+  let response;
+  try {
+    response = await getRecommendations(client, prompt, true);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("recommend route: web-search call failed, retrying without search:", message);
+    try {
+      response = await getRecommendations(client, prompt, false);
+    } catch (err2) {
+      const message2 = err2 instanceof Error ? err2.message : String(err2);
+      console.error("recommend route: fallback call also failed:", message2);
+      return NextResponse.json(
+        { error: "AI request failed", detail: message2 },
+        { status: 500 }
+      );
     }
+  }
 
+  // Combine every text block, then pull out the JSON object between the first
+  // { and last } — robust against any stray prose the model adds.
+  const fullText = response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("\n");
+
+  const start = fullText.indexOf("{");
+  const end = fullText.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) {
+    console.error("recommend route: no JSON found in response:", fullText.slice(0, 300));
+    return NextResponse.json({ error: "No recommendations returned" }, { status: 500 });
+  }
+
+  try {
     const parsed = JSON.parse(fullText.slice(start, end + 1));
     return NextResponse.json(parsed);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("recommend route error:", message);
-    return NextResponse.json({ error: "Something went wrong", detail: message }, { status: 500 });
+    console.error("recommend route: JSON parse failed:", message, "| text:", fullText.slice(0, 300));
+    return NextResponse.json({ error: "Could not parse recommendations", detail: message }, { status: 500 });
   }
 }

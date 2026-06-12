@@ -1,6 +1,7 @@
 "use client";
 
 import type { BookRecommendation } from "@/lib/types";
+import { getEllieRating } from "@/lib/ellie-ratings";
 
 interface Props {
   book: BookRecommendation;
@@ -17,6 +18,8 @@ const lengthColors: Record<string, string> = {
 };
 
 export default function BookCard({ book, onNotForMe, onEnjoyed, replacing, enjoyed }: Props) {
+  const ellieRating = getEllieRating(book.title);
+
   return (
     <article className="bg-white border border-[#e0d5c5] rounded-2xl p-6 shadow-sm flex flex-col gap-4 transition-opacity duration-300">
       <div className="flex items-start justify-between gap-3">
@@ -44,6 +47,21 @@ export default function BookCard({ book, onNotForMe, onEnjoyed, replacing, enjoy
         <p className="text-xs text-[#8a6a52] italic border-l-2 border-[#d9c9b5] pl-3">
           {book.criticsQuote}
         </p>
+      )}
+
+      {ellieRating !== null && (
+        <div className="flex items-center gap-2 bg-[#fdf3e7] border border-[#f0dfc0] rounded-xl px-4 py-2.5">
+          <span className="text-xs font-semibold text-[#b5763a] uppercase tracking-wide shrink-0">
+            Ellie read this
+          </span>
+          <span className="text-sm leading-none" aria-label={`${ellieRating} out of 5 stars`}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <span key={i} className={i < ellieRating ? "text-[#b5763a]" : "text-[#ddc9a8]"}>
+                ★
+              </span>
+            ))}
+          </span>
+        </div>
       )}
 
       <div className="mt-auto flex gap-2">

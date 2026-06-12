@@ -1,0 +1,75 @@
+// Ellie's Goodreads ratings — used to show her star rating on book cards
+// when BookMatch recommends something she's already read.
+// Keyed by lowercase title for case-insensitive matching.
+
+const ratings: Record<string, number> = {
+  "blue sisters": 4,
+  "the giver": 5,
+  "siddhartha": 5,
+  "the handmaid's tale": 5,
+  "how to stop time": 3,
+  "the lion women of tehran": 5,
+  "parable of the sower": 3,
+  "the quiet tenant": 4,
+  "the secret life of sunflowers": 3,
+  "cloud cuckoo land": 5,
+  "under the whispering door": 5,
+  "eleanor oliphant is completely fine": 5,
+  "big swiss": 3,
+  "i am pilgrim": 5,
+  "corrections in ink": 5,
+  "corrections in ink: a memoir": 5,
+  "salvage the bones": 4,
+  "frankenstein in baghdad": 2,
+  "frankenstein: the 1818 text": 3,
+  "frankenstein": 3,
+  "i'll give you the sun": 5,
+  "a long walk to water": 5,
+  "a wrinkle in time": 3,
+  "the hate u give": 4,
+  "just mercy": 4,
+  "lessons in chemistry": 5,
+  "nine perfect strangers": 4,
+  "bad feminist": 2,
+  "malibu rising": 5,
+  "one hundred saturdays": 5,
+  "somewhere beyond the sea": 4,
+  "the body": 4,
+  "born a crime": 4,
+  "the nightingale": 5,
+  "educated": 5,
+  "the vanishing half": 4,
+  "the secret history": 5,
+  "the guest list": 2,
+  "the thursday murder club": 4,
+  "the girl on the train": 5,
+  "gone girl": 5,
+  "the girl with the dragon tattoo": 5,
+  "anxious people": 4,
+  "the house in the cerulean sea": 5,
+  "demon copperhead": 5,
+  "tom lake": 4,
+  "sunrise on the reaping": 5,
+  "yellowface": 4,
+  "atmosphere": 3,
+  "happy place": 3,
+  "book lovers": 3,
+  "people we meet on vacation": 3,
+  "carrie soto is back": 3,
+  "tomorrow, and tomorrow, and tomorrow": 4,
+  "the midnight library": 5,
+  "remarkably bright creatures": 4,
+  "verity": 1,
+  "1984": 5,
+  "the great gatsby": 5,
+  "the book thief": 4,
+  "code name verity": 1,
+  "the seven husbands of evelyn hugo": 0, // rating not received — update when known
+};
+
+export function getEllieRating(title: string): number | null {
+  const rating = ratings[title.toLowerCase().trim()];
+  if (rating === undefined) return null;
+  if (rating === 0) return null; // placeholder for missing rating
+  return rating;
+}

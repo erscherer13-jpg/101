@@ -63,7 +63,7 @@ export default function ResultsGrid({ books: initial, request, sessionShown, onH
   }
 
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 sm:grid-cols-2">
       {books.map((book) => (
         <BookCard
           key={book.id}

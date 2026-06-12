@@ -73,7 +73,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#faf6f0] px-4 py-12 pb-20">
-      <div className="max-w-2xl mx-auto">
+      <div className={`mx-auto transition-all duration-300 ${results ? "max-w-5xl" : "max-w-2xl"}`}>
         {/* Wordmark */}
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-serif text-[#3b2a1a] tracking-tight">

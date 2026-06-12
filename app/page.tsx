@@ -73,15 +73,15 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#faf6f0] pb-20">
+    <main className="min-h-screen bg-[#faf6f0] flex flex-col">
       <Header onTitleClick={results ? handleNewSearch : undefined} />
-      <div className={`mx-auto px-4 transition-all duration-300 ${results ? "max-w-5xl" : "max-w-2xl"}`}>
+      <div className={`mx-auto px-6 w-full transition-all duration-300 ${results ? "max-w-5xl" : "max-w-2xl flex-1 flex flex-col justify-center py-8"}`}>
 
         {!results ? (
-          <form onSubmit={handleSubmit} className="space-y-7">
+          <form onSubmit={handleSubmit} className="space-y-10">
             {/* Mood */}
             <div>
-              <label className="block font-serif text-[#3b2a1a] text-lg mb-2">
+              <label className="block font-serif text-[#3b2a1a] text-2xl mb-3">
                 What kind of read are you hoping for?
               </label>
               <input
@@ -89,13 +89,13 @@ export default function HomePage() {
                 value={mood}
                 onChange={(e) => setMood(e.target.value)}
                 placeholder="e.g. something light, a page-turner, a slow burn"
-                className="w-full rounded-xl border border-[#d9c9b5] bg-white px-4 py-3 text-[#3b2a1a] placeholder-[#c4a882] focus:outline-none focus:ring-2 focus:ring-[#b5763a]/40 text-sm"
+                className="w-full rounded-xl border border-[#d9c9b5] bg-white px-5 py-4 text-[#3b2a1a] placeholder-[#c4a882] focus:outline-none focus:ring-2 focus:ring-[#b5763a]/40 text-base"
               />
             </div>
 
             {/* Avoid */}
             <div>
-              <label className="block font-serif text-[#3b2a1a] text-lg mb-2">
+              <label className="block font-serif text-[#3b2a1a] text-2xl mb-3">
                 Anything to avoid this time?
               </label>
               <input
@@ -103,22 +103,22 @@ export default function HomePage() {
                 value={avoid}
                 onChange={(e) => setAvoid(e.target.value)}
                 placeholder="e.g. nothing too sad, no sci-fi"
-                className="w-full rounded-xl border border-[#d9c9b5] bg-white px-4 py-3 text-[#3b2a1a] placeholder-[#c4a882] focus:outline-none focus:ring-2 focus:ring-[#b5763a]/40 text-sm"
+                className="w-full rounded-xl border border-[#d9c9b5] bg-white px-5 py-4 text-[#3b2a1a] placeholder-[#c4a882] focus:outline-none focus:ring-2 focus:ring-[#b5763a]/40 text-base"
               />
             </div>
 
             {/* Length */}
             <div>
-              <label className="block font-serif text-[#3b2a1a] text-lg mb-3">
+              <label className="block font-serif text-[#3b2a1a] text-2xl mb-4">
                 How long a book?
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {lengthLabels.map(({ value, label }) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setLength(value)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors duration-150 ${
+                    className={`px-5 py-3 rounded-xl text-base font-medium border transition-colors duration-150 ${
                       length === value
                         ? "bg-[#b5763a] text-white border-[#b5763a]"
                         : "bg-white text-[#6b5240] border-[#d9c9b5] hover:border-[#b5763a]"
@@ -134,7 +134,7 @@ export default function HomePage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#3b2a1a] hover:bg-[#5a3e28] text-white font-semibold text-base py-4 rounded-xl transition-colors duration-200 disabled:opacity-60 disabled:cursor-wait"
+              className="w-full bg-[#3b2a1a] hover:bg-[#5a3e28] text-white font-semibold text-lg py-5 rounded-xl transition-colors duration-200 disabled:opacity-60 disabled:cursor-wait"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
